@@ -1,14 +1,9 @@
 <?php
+	//Get the Event data from the server.
 try {
 	//connect to database
 	require 'dbConnect_PDO.php';
 	
-	//create query
-	$sql = "SELECT event_id, event_name, event_description, event_presenter, event_day, event_time
-	FROM wdv341_events";
-	$message="";
-
-	$resultsTable="";
 	$event_id="";
 	$event_name="";
 	$event_description="";
@@ -16,69 +11,16 @@ try {
 	$event_day="";
 	$event_time="";	
 	
-	//prepare the statement
-	$statement = $conn->prepare($sql);
+	//create query
+	$stmt = $conn->prepare("SELECT event_id, event_name, event_description, event_presenter, DATE_FORMAT(event_day, '%m-%d-%Y') AS event_day, TIME_FORMAT( event_time,'%l:%i %p' )AS event_time
+	FROM wdv341_events");
 	
-	//check if successful
-	if (!$statement){
-		$message = "prepare fail";
-	}
+	$stmt->execute();
 	
-	//execute
-	if ($statement->execute()){
-		$resultsTable="<h1>Display Events</h1>";
-		
-		if ($statement->rowCount() > 0){
-			
-			$resultsTable .= "<table>";
-			$resultsTable .= "<th>Event ID</th>";
-			$resultsTable .= "<th>Event Name</th>";
-			$resultsTable .= "<th>Event Description</th>";
-			$resultsTable .= "<th>Event Presenter</th>";
-			$resultsTable .= "<th>Event Day</th>";			
-			$resultsTable .= "<th>Event Time</th>";	
-			
-		}
-			while ($row = $statement->fetch(PDO::FETCH_ASSOC)){
-			$resultsTable .= "<tr><td>";
-			$resultsTable .= $row['event_id'];		
-			$resultsTable .= "</td><td>";
-			$resultsTable .= $row['event_name'];	
-			$resultsTable .= "</td><td>";
-			$resultsTable .= $row['event_description'];
-			$resultsTable .= "</td><td>";
-			$resultsTable .= $row['event_presenter'];
-			$resultsTable .= "</td><td>";
-			$resultsTable .= $row['event_day'];
-			$resultsTable .= "</td><td>";			
-			$resultsTable .= $row['event_time'];	
-			$resultsTable .= "</td></tr>";	
-			}
-
-			$resultsTable .= "<tr><td>";
-			$resultsTable .= $event_id;
-			$resultsTable .= "</td><td>";			
-			$resultsTable .= $event_name;
-			$resultsTable .= "</td><td>";			
-			$resultsTable .= $event_description;
-			$resultsTable .= "</td><td>";
-			$resultsTable .= $event_presenter;
-			$resultsTable .= "</td><td>";
-			$resultsTable .= $event_day;
-			$resultsTable .= "</td><td>";			
-			$resultsTable .= $event_time;			
-			$resultsTable .= "</td></tr>";			
-			$resultsTable .= "</table>";
-		}
-		
-	}	catch (PDOException $e){
-	$message .= "oops there's another error";
-	error_log($e->getMessage());
-	
+	} catch(PDOException $e) {
+    echo "Error: " . $e->getMessage();
 }		
-  	//close while loop
-$statement = null;
-$conn = null;	//Close the database connection	
+
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -90,7 +32,24 @@ $conn = null;	//Close the database connection
 			width:500px;
 			margin-left:auto;
 			margin-right:auto;
-			background-color:#CCC;	
+			background-color:#F3D6E4;
+			padding:10px;
+			border-radius: 25px;	
+			border-style: solid;			
+		}
+		
+		.titleBlock{
+			width:700px;
+			margin-left:auto;
+			margin-right:auto;
+			background-color:#F3D6E4;
+			padding:10px;
+			border-radius: 25px;	
+			border-style: solid;			
+		}		
+		
+		body{
+			background-color:#898E8C;
 		}
 		
 		.displayEvent{
@@ -101,34 +60,61 @@ $conn = null;	//Close the database connection
 		.displayDescription {
 			margin-left:100px;
 		}
+		
+		.style {
+			text-align: center;
+		}
+		
+		button {
+			padding: 15px 30px;
+			display:block;			
+			margin:0 auto;
+			background-color: #F3D6E4;
+			border: solid;
+			border-radius: 25px;			
+		}
 	</style>
 </head>
 
 <body>
-    <h1>WDV341 Intro PHP</h1>
-    <h2>Example Code - Display Events as formatted output blocks</h2>   
-    <h3> <?php echo $query->num_rows; ?> Events are available today.</h3>
-
+	<div class="titleBlock">
+    <h1 class="style">WDV341 Intro PHP</h1>
+    <h2 class="style">Example Code - Display Events as formatted output blocks</h2>   
+    <h3 class="style">There are <?php echo $stmt->rowCount(); ?> events available today.</h3>
+	</div>
+<br>
+	<a href=""><button>View PHP</button></a>	
+	
+<?php
+	//Display each row as formatted output
+	while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) 
+	//Turn each row of the result into an associative array 
+  	{
+		//For each row you have in the array create a block of formatted text
+?>	
 
 	<p>
         <div class="eventBlock">	
             <div>
-            	<span class="displayEvent">Event: <?php echo $event_name ?></span>
-            	<span class="displayDescription">Description: <?php echo $event_description ?></span>
+            	<span class="displayEvent">Event: <?php echo $row["event_name"]; ?></span>
+            	<span class="displayDescription">Description: <?php echo $row["event_description"]; ?></span>
             </div>
             <div>
-            	Presenter: <?php echo $event_presenter ?>
+            	Presenter: <?php echo $row["event_presenter"]; ?>
             </div>
             <div>
-            	<span class="displayTime">Time: <?php echo $event_time ?></span>
+            	<span class="displayTime">Time: <?php echo $row["event_time"]; ?></span>
             </div>
             <div>
-            	<span class="displayDate">Date: <?php echo $event_day ?></span>
+            	<span class="displayDate">Date: <?php echo $row["event_day"]; ?></span>
             </div>
         </div>
     </p>
-
-
+<?php	
+  	}//close while loop
+$statement = null;
+$conn = null;	//Close the database connection	
+?>
 </div>	
 </body>
 </html>
