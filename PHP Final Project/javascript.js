@@ -1,4 +1,4 @@
-// Example 26-14: javascript.js
+
 
 canvas               = O('logo')
 context              = canvas.getContext('2d')
